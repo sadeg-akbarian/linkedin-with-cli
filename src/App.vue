@@ -20,6 +20,7 @@ html {
 body {
   margin: 0;
   height: 100vh;
+  background-color: rgba(128, 128, 128, 0.25);
 }
 
 #app {
@@ -28,6 +29,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 nav {
