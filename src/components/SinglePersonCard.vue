@@ -1,5 +1,5 @@
 <template>
-  <div class="singlePersonContainer">
+  <div class="singlePersonContainer" data-index="indexInArray">
     <div class="containerWithoutButton">
       <img :src="singlePersonProfile.picture" />
       <p
@@ -18,27 +18,42 @@
         v-text="singlePersonProfile.mutualConnections + ' mutual connections'"
       ></p>
     </div>
-    <button type="button" class="connectButton">Connect</button>
+    <button
+      type="button"
+      class="connectButton"
+      @click="changePendingState($event)"
+    >
+      Connect
+    </button>
+    <button type="button" class="closeButton" @click="removeProfile($event)">
+      X
+    </button>
   </div>
 </template>
-
-<!-- 
-name:Object
-  first:"Kors"
-  last:"Van Eldijk"
-  title:"Mr"
-title:"Art Director"
-picture:"https://randomuser.me/api/portraits/men/79.jpg"
-mutualConnections:7
-backgroundImage:"https://source.unsplash.com/random/300×300"
-id:"lv1529zx317ab1f0w5"
- -->
 
 <script>
 export default {
   name: "SinglePersonCard",
   props: {
     singlePersonProfile: Object,
+    indexInArray: Number,
+  },
+  methods: {
+    changePendingState(event) {
+      if (event.target.innerText === "Connect") {
+        this.$emit("newPendingState", "increase");
+        event.target.innerText = "Pending";
+      } else {
+        this.$emit("newPendingState", "decrease");
+        event.target.innerText = "Connect";
+      }
+    },
+    removeProfile(event) {
+      const buttonSibling =
+        event.target.parentElement.querySelector(".connectButton");
+      const dataForRemovel = [buttonSibling.innerText, this.indexInArray];
+      this.$emit("removeIt", dataForRemovel);
+    },
   },
 };
 </script>
@@ -88,5 +103,12 @@ img {
   border-color: blue;
   border-radius: 2.5vmin;
   margin-bottom: 5%;
+}
+
+.closeButton {
+  border-radius: 50%;
+  position: absolute;
+  top: 2%;
+  right: 3%;
 }
 </style>

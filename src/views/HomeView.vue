@@ -1,7 +1,7 @@
 <template>
   <div class="homeView-container">
     <header>
-      <p>No pending invitations</p>
+      <p v-text="showInvitations()"></p>
       <button type="button">Manage</button>
     </header>
     <main>
@@ -11,9 +11,12 @@
       </div>
       <div class="profileArea">
         <SinglePersonCard
-          v-for="profile of this.profileList"
+          v-for="(profile, index) of this.profileList"
           :key="profile.id"
+          :indexInArray="index"
           :singlePersonProfile="profile"
+          @newPendingState="changeThePendingState"
+          @removeIt="removeTheProfile"
         />
       </div>
     </main>
@@ -29,6 +32,7 @@ export default {
       urlOfBackend:
         "https://dummy-apis.netlify.app/api/contact-suggestions?count=1",
       profileList: [],
+      pendingInvitations: null,
     };
   },
   name: "HomeView",
@@ -38,24 +42,69 @@ export default {
   methods: {
     initalDataFromBackend() {
       for (let i = 0; i < 8; i++) {
-        fetch(this.urlOfBackend)
-          .then((response) => {
-            if (response.ok === true) {
-              return response.json();
-            } else {
-              alert("Error: Profiles could not be loaded!!!");
-            }
-          })
-          .then((data) => {
-            data[0].id =
-              Date.now().toString(36) + Math.random().toString(36).substr(2);
-            this.profileList.push(data[0]);
-          });
+        this.fetchTheProfile();
       }
+    },
+    fetchTheProfile() {
+      fetch(this.urlOfBackend)
+        .then((response) => {
+          if (response.ok === true) {
+            return response.json();
+          } else {
+            alert("Error: Profiles could not be loaded!!!");
+          }
+        })
+        .then((data) => {
+          data[0].id =
+            Date.now().toString(36) + Math.random().toString(36).substr(2);
+          this.profileList.push(data[0]);
+        });
+    },
+    getPendingsFromLocalStorage() {
+      let numberOfPendings = JSON.parse(
+        localStorage.getItem("numberOfPendings")
+      );
+      if (numberOfPendings === null) {
+        numberOfPendings = 0;
+      }
+      this.pendingInvitations = numberOfPendings;
+    },
+    sendPendingsToLocalStorage(whatToDo) {
+      let numberOfPendings;
+      if (whatToDo === "increase") {
+        numberOfPendings = this.pendingInvitations + 1;
+      } else {
+        numberOfPendings = this.pendingInvitations - 1;
+      }
+      localStorage.setItem(
+        "numberOfPendings",
+        JSON.stringify(numberOfPendings)
+      );
+    },
+    changeThePendingState(data) {
+      this.sendPendingsToLocalStorage(data);
+      this.getPendingsFromLocalStorage();
+    },
+    showInvitations() {
+      if (this.pendingInvitations === 0) {
+        return "No pending invitations";
+      } else if (this.pendingInvitations === 1) {
+        return "1 pending invitation";
+      } else {
+        return this.pendingInvitations + " pending invitations";
+      }
+    },
+    removeTheProfile(data) {
+      if (data[0] === "Pending") {
+        this.pendingInvitations--;
+      }
+      this.profileList.splice(data[1], 1);
+      this.fetchTheProfile();
     },
   },
   created() {
     this.initalDataFromBackend();
+    this.getPendingsFromLocalStorage();
   },
 };
 </script>
@@ -88,8 +137,8 @@ header > * {
 }
 
 main {
-  height: 85vh;
   margin-top: 2vh;
+  padding-bottom: 1vh;
 }
 
 .areaContainer {
